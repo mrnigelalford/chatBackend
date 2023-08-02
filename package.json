@@ -1,0 +1,31 @@
+{
+  "name": "chatbackend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --ext .ts",
+    "start": "npx tsc && node dist/app.js"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^4.17.1",
+    "@types/got": "^9.6.12",
+    "@typescript-eslint/eslint-plugin": "^6.2.1",
+    "@typescript-eslint/parser": "^6.2.1",
+    "eslint": "^8.46.0",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.31.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.17.1",
+    "get-site-urls": "^3.0.0",
+    "got": "^13.0.0",
+    "htmlparser2": "^9.0.0"
+  }
+}

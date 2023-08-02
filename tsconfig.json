@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",                                  /* Specify what module code is generated. */
+    "moduleResolution": "node",
+    "target": "ES6",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "outDir": "dist"
+  },
+  "include": ["src"],
+  "lib": ["es2015"]
+}
