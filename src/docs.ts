@@ -6,16 +6,15 @@ import { getEmbedding } from "./setEmbeddings";
 const maxTokens = 2000;
 
 /**
-  * build an embedding using search text provided from user
-  * text passed to openai embedding
-  * resulting embedding is sent to supabase to match to a similar embedding (thresholds are applied and can be adjusted)
-  * matching text is sent to openai with wrapping parameters to protect from hacking and streamline the input and output from openai
-  * the answer is streamed back from openai to front-end.
-  * model: gpt-3.5-turbo-0301
+ * Build an embedding using the search text provided from the user.
+ * Text is passed to OpenAI embedding API, and the resulting embedding is sent to Supabase to match to a similar embedding.
+ * Matching text is sent to OpenAI with wrapping parameters to protect from hacking and streamline the input and output from OpenAI.
+ * The answer is streamed back from OpenAI to the front-end.
+ * @param {string} question - The user's question.
+ * @param {string} projectID - The project ID for storing embeddings and responses.
+ * @returns {Promise<string>} - The response from OpenAI.
  */
-
 const getOpenAIStream = async (question: string, projectID: string): Promise<string> => {
-
   // OpenAI recommends replacing newlines with spaces for best results
   const storedEmbedding = await getQuestionEmbedding(question, `${projectID}_questions`);
   let embedding;
@@ -30,14 +29,12 @@ const getOpenAIStream = async (question: string, projectID: string): Promise<str
   }
 
   // Build recall logic to pull previously stored embeddings and answers
-
   const embeddingMatch = await getSimilarEmbeddings(embedding);
 
   if (embeddingMatch?.gpt_response) {
     // this question has a response, use that instead of calling openai
-    return embeddingMatch?.gpt_response;
+    return embeddingMatch.gpt_response;
   } else {
-
     const tokenizer = new GPT3Tokenizer({ type: "gpt3" });
     let contextText = "";
 
@@ -51,40 +48,40 @@ const getOpenAIStream = async (question: string, projectID: string): Promise<str
 
       contextText += `${embeddingMatch.content.trim()}\nSOURCE: ${embeddingMatch.url}\n---\n`;
     }
+
     const systemContent = `You are a helpful assistant. When given CONTEXT you answer questions using only that information, and you always format your output in markdown. You include code snippets if relevant. If you are unsure and the answer is not explicitly written in the CONTEXT provided, you say "Sorry, I don't know how to help with that."  If the CONTEXT includes source URLs include them under a SOURCES heading at the end of your response. Always include all of the relevant source urls from the CONTEXT, but never list a URL more than once (ignore trailing forward slashes when comparing for uniqueness). Never include URLs that are not in the CONTEXT sections. Never make up URLs. Do not return markdown format`;
 
     const assistantContent = `example text
-    
+
     \`\`\`js
     function HomePage() {
       return <div>test</div>
     }
-    
+
     export default HomePage
     \`\`\`
-    
+
     SOURCES: https://test.com`;
 
     const userMessage = `CONTEXT:
     ${contextText}
-    
+
     USER QUESTION: 
-    ${question}  
-    `;
+    ${question}`;
 
     const messages = [
       {
         role: "system",
-        content: systemContent
+        content: systemContent,
       },
       {
         role: "assistant",
-        content: assistantContent
+        content: assistantContent,
       },
       {
         role: "user",
-        content: userMessage
-      }
+        content: userMessage,
+      },
     ];
 
     const payload: OpenAIStreamPayload = {
@@ -96,11 +93,11 @@ const getOpenAIStream = async (question: string, projectID: string): Promise<str
       presence_penalty: 0,
       max_tokens: maxTokens,
       stream: true,
-      n: 1
+      n: 1,
     };
 
     const reader = (await OpenAIStream(payload)).getReader();
-    let chunks;
+    let chunks = "";
 
     let done, val;
     while (!done) {
