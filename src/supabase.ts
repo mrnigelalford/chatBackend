@@ -17,7 +17,7 @@ if (!client.url || !client.key) {
   throw new Error("Missing Supabase credentials");
 }
 
-const supabaseClient = createClient(client.url!, client.key!);
+export const supabaseClient = createClient(client.url!, client.key!);
 
 export async function setDocument(url: { url: string }[]): Promise<PostgrestSingleResponse<never[]> | PostgrestError> {
   try {
