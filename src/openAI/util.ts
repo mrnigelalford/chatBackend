@@ -1,8 +1,4 @@
-import {
-  createParser,
-  ParsedEvent,
-  ReconnectInterval,
-} from "eventsource-parser";
+import { createParser, ParsedEvent, ReconnectInterval } from "eventsource-parser";
 
 export interface OpenAIStreamPayload {
   model: string;
@@ -16,11 +12,8 @@ export interface OpenAIStreamPayload {
   n: number;
 }
 
-export async function OpenAIStream(payload: OpenAIStreamPayload) {
-  const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
-
-  const apiURL = process.env.OPENAI_PROXY == "" ? "https://api.openai.com" : process.env.OPENAI_PROXY;
+export async function OpenAIStream(payload: OpenAIStreamPayload): Promise<ReadableStream<Uint8Array>> {
+  const apiURL = process.env.OPENAI_PROXY === "" ? "https://api.openai.com" : process.env.OPENAI_PROXY;
 
   const res = await fetch(`${apiURL}/v1/chat/completions`, {
     headers: {
@@ -31,10 +24,12 @@ export async function OpenAIStream(payload: OpenAIStreamPayload) {
     body: JSON.stringify(payload),
   });
 
-  const stream = new ReadableStream({
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+
+  const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      // callback
-      function onParse(event: ParsedEvent | ReconnectInterval) {
+      const onParse = (event: ParsedEvent | ReconnectInterval) => {
         if (event.type === "event") {
           const data = event.data;
           if (data === "[DONE]") {
@@ -47,18 +42,16 @@ export async function OpenAIStream(payload: OpenAIStreamPayload) {
             const queue = encoder.encode(content);
             controller.enqueue(queue);
           } catch (e) {
-            // maybe parse error
             controller.error(e);
           }
         }
-      }
+      };
 
-      // stream response (SSE) from OpenAI may be fragmented into multiple chunks
-      // this ensures we properly read chunks and invoke an event for each SSE event stream
       const parser = createParser(onParse);
-      // https://web.dev/streams/#asynchronous-iteration
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      for await (const chunk of res.body as any) {
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      for await (const chunk of res.body) {
         parser.feed(decoder.decode(chunk));
       }
     },

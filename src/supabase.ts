@@ -3,6 +3,20 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
+interface QuestionEmbedding {
+  question: string;
+  input?: string;
+  embedding: number[];
+  location: string;
+}
+
+interface Embedding {
+  url: string;
+  id: string;
+  content: string;
+  gpt_response?: string;
+}
+
 interface Client {
   url?: string;
   key?: string;
@@ -59,5 +73,63 @@ export async function getProjectUrls(projectID: string): Promise<string[]> {
   } catch (error) {
     console.error("Error in Supabase select: ", error);
     return [];
+  }
+}
+
+export async function setQuestionEmbedding({ question, embedding, location }: QuestionEmbedding): Promise<void> {
+  try {
+    await supabaseClient.from(location).insert({
+      embedding,
+      question,
+    });
+  } catch (error) {
+    console.error("Error in setStoredEmbedding: ", error);
+    throw error;
+  }
+}
+
+
+export async function getQuestionEmbedding(question: string, location: string): Promise<{embedding: number[], question: string, id: number} | null> {
+  try {
+    const { data: embeddings, error } = await supabaseClient.from(location).select('*').ilike('question', `%${question}%`);
+    if (error) {
+      throw new Error("Error fetching question embedding.");
+    }
+    return embeddings?.[0] || null;
+  } catch (error) {
+    console.error("Error in getQuestionEmbedding: ", error);
+    throw error;
+  }
+}
+
+export async function getSimilarEmbeddings(embedding: number[]): Promise<Embedding | null> {
+  try {
+    const { data: documents, error } = await supabaseClient.rpc(
+      "match_documents",
+      {
+        query_embedding: embedding,
+        similarity_threshold: 0.1, // Choose an appropriate threshold for your data
+        match_count: 3, // Choose the number of matches
+      }
+    );
+
+    if (error) {
+      throw new Error("Error fetching similar embeddings.");
+    }
+
+    return documents?.[0] || null;
+  } catch (error) {
+    console.error('Error in getSimilarEmbeddings: ', error);
+    throw error;
+  }
+}
+
+// Add gptResponse to document
+export async function updateSupabaseDoc(text: string, location: string, id: number): Promise<void> {
+  try {
+    await supabaseClient.from(location).update({ 'gpt_response': text }).eq('id', id);
+  } catch (error) {
+    console.error("Error in updateSupabaseDoc: ", error);
+    throw error;
   }
 }

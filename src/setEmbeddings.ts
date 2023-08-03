@@ -51,7 +51,7 @@ async function getDocuments(urls: string[]): Promise<{url: string; body: string}
  * @param {string} input - The input text to be embedded.
  * @returns {Promise<number[]>} - An array containing the embedding.
  */
-async function getEmbedding(input: string): Promise<number[]> {
+export async function getEmbedding(input: string): Promise<number[]> {
   const apiKey = process.env.OPENAI_API_KEY;
   const apiURL = process.env.OPENAI_PROXY || "https://api.openai.com";
 
