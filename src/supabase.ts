@@ -27,16 +27,36 @@ export async function setDocument(url: { url: string }[]): Promise<PostgrestSing
   }
 }
 
+interface dbInput {
+  url: string, input: string, embedding: number[]; id: string;
+}
 
 // Save Embedding to Supabase
-export async function saveToSupabase(url: string, input: string, embedding: number[]): Promise<void> {
+export async function saveToSupabase(crawl: dbInput): Promise<void> {
   try {
-    await supabaseClient.from("documents").insert({
-      content: input,
-      embedding,
-      url
+    await supabaseClient.from(`${crawl.id}_documents`).insert({
+      content: crawl.input,
+      embedding: crawl.embedding,
+      url: crawl.url
     });
   } catch (error) {
     console.error("Error in Supabase insert: ", error);
+  }
+}
+
+export async function getProjectUrls(projectID: string): Promise<string[]> {
+  try {
+    const { data } = await supabaseClient
+      .from(`${projectID}_external_urls`)
+      .select('url')
+      .is('last_embed_date', null);
+
+    // Extract the 'url' property from each item in the 'data' array
+    const urls: string[] = data.map((item: { url: string }) => item.url);
+
+    return urls;
+  } catch (error) {
+    console.error("Error in Supabase select: ", error);
+    return [];
   }
 }
