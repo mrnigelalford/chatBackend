@@ -22,10 +22,10 @@ app.post('/PageEmbeddings', (req: Request, res: Response) => {
   res.set('Content-Type', 'application/json').status(200).send({ note: 'Successfully started embeddings. Please check additional endpoint for ongoing status or look in Supabase to see records returned. This endpoint will only start the crawling action.' })
 })
 
-app.get('/questions', (req: Request, res: Response) => {
-  getOpenAIStream(req.body.question, req.body.projectID);
-  res.set('Content-Type', 'application/json').status(200).send({ note: 'Successfully started embeddings. Please check additional endpoint for ongoing status or look in Supabase to see records returned. This endpoint will only start the crawling action.' })
-})
+app.get('/questions', async (req: Request, res: Response) => {
+  const answer = await getOpenAIStream(req.body.question, req.body.projectID);
+  res.set('Content-Type', 'application/json').status(200).send({ answer })
+});
 
 app.listen(port, () => {
   return console.log(`Express is listening at http://localhost:${port}`);
