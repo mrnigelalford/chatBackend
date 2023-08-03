@@ -1,25 +1,27 @@
 import * as cheerio from "cheerio";
 import pLimit from "p-limit";
+import fetch from "node-fetch";
 import { getProjectUrls, saveToSupabase } from "./supabase";
 
 const DOC_SIZE = 1000;
-
+  
+//TODO: Improve the text scrapping logic
 /**
- * 
- * @param url string
- * @returns {url: string, body: string}
- * @description crawls a url and returns all text on the page.
+ * Fetches documents from a URL and returns the body text in chunks.
+ * @param {string} url - The URL to fetch documents from.
+ * @returns {Promise<{url: string; body: string}[]>} - An array of objects containing URL and document body text chunks.
  */
 async function fetchDocuments(url: string): Promise<{url: string; body: string}[]> {
-  //TODO: Improve the text scrapping logic
   const splashUrl = process.env.SPLASH_URL;
-  const fetchURL = splashUrl ? new URL(`/render.html?url=${encodeURIComponent(url)}&timeout=10&wait=0.5`, splashUrl).href : url;
-  
+  const fetchURL = splashUrl
+    ? new URL(`/render.html?url=${encodeURIComponent(url)}&timeout=10&wait=0.5`, splashUrl).href
+    : url;
+
   const response = await fetch(fetchURL);
   const html = await response.text();
   const $ = cheerio.load(html);
   const articleText: string = $("body").text();
-  
+
   const documents: {url: string; body: string}[] = [];
   for (let start = 0; start < articleText.length; start += DOC_SIZE) {
     const chunk = articleText.substring(start, start + DOC_SIZE);
@@ -30,49 +32,40 @@ async function fetchDocuments(url: string): Promise<{url: string; body: string}[
 }
 
 /**
- * 
- * @param urls string
- * @returns Object: url: string, body: string
- * @description limiting function to batch page crawling into batch of 10.
- * Will return ALL urls and their page text.
+ * Fetches documents from multiple URLs and returns their body text.
+ * Limits the number of concurrent requests to 10.
+ * @param {string[]} urls - An array of URLs to fetch documents from.
+ * @returns {Promise<{url: string; body: string}[]>} - An array of objects containing URL and document body text chunks.
  */
 async function getDocuments(urls: string[]): Promise<{url: string; body: string}[]> {
-  // Set a limit of 10 concurrent promises
   const limit = pLimit(10);
   const pageText = urls.map((url) => limit(() => fetchDocuments(url)));
 
-  // Now, no more than 10 promises will be run at once.
   const allDocuments = await Promise.all(pageText);
 
   return allDocuments.flat();
 }
 
-
 /**
- * 
- * @param input string
- * @description create openAI embedding for page docs using model `text-embedding-ada-002`
- * @returns complete embedding
+ * Fetches the embedding for a given input using the OpenAI API.
+ * @param {string} input - The input text to be embedded.
+ * @returns {Promise<number[]>} - An array containing the embedding.
  */
 async function getEmbedding(input: string): Promise<number[]> {
-
   const apiKey = process.env.OPENAI_API_KEY;
   const apiURL = process.env.OPENAI_PROXY || "https://api.openai.com";
 
-  const embeddingResponse = await fetch(
-    `${apiURL}/v1/embeddings`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        input,
-        model: "text-embedding-ada-002"
-      })
-    }
-  );
+  const embeddingResponse = await fetch(`${apiURL}/v1/embeddings`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      input,
+      model: "text-embedding-ada-002"
+    })
+  });
 
   const embeddingData = await embeddingResponse.json();
   const [{ embedding }] = embeddingData.data;
@@ -80,9 +73,9 @@ async function getEmbedding(input: string): Promise<number[]> {
 }
 
 /**
- * 
- * @param docURLs 
- * @description for each url, pull documents, convert to emebedding, store in supabase
+ * Crawls URLs, converts documents to embeddings, and stores them in the Supabase table.
+ * @param {string[]} docURLs - An array of URLs to crawl and convert to embeddings.
+ * @param {string} id - The project ID to store the embeddings in.
  */
 async function scrapeAndEmbed(docURLs: string[], id: string) {
   const documents = await getDocuments(docURLs);
@@ -90,16 +83,13 @@ async function scrapeAndEmbed(docURLs: string[], id: string) {
   for (const { url, body } of documents) {
     const input = body.replace(/\n/g, " ");
     const embedding = await getEmbedding(input);
-    await saveToSupabase({url, input, embedding, id});
+    await saveToSupabase({ url, input, embedding, id });
   }
 }
 
 /**
- * 
- * @param projectID 
- * @description Entry point. Create and store embeddings for a given project id
- * example. projectID = 'balancer'
- * All urls are stored in a supabase table '[project_id]_external_urls
+ * Entry point. Creates and stores embeddings for a given project ID.
+ * @param {string} projectID - The project ID containing the URLs to crawl and convert to embeddings.
  */
 export async function setEmbeddings(projectID: string) {
   const urls = await getProjectUrls(projectID);
