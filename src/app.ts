@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import getAllInnerPages from "./crawler.js";
+import getAllInnerPages from "./crawler";
 
 
 const app = express();

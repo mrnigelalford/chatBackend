@@ -1,5 +1,6 @@
 import { PostgrestError, PostgrestSingleResponse, createClient } from "@supabase/supabase-js";
 import * as dotenv from 'dotenv';
+
 dotenv.config();
 
 interface Client {
