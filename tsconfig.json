@@ -11,8 +11,9 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "noImplicitAny": false
   },
-  "include": ["src"],
+  "include": ["src/**/*"],
   "lib": ["es2015"]
 }

@@ -26,3 +26,17 @@ export async function setDocument(url: { url: string }[]): Promise<PostgrestSing
     return error as PostgrestError;
   }
 }
+
+
+// Save Embedding to Supabase
+export async function saveToSupabase(url: string, input: string, embedding: number[]): Promise<void> {
+  try {
+    await supabaseClient.from("documents").insert({
+      content: input,
+      embedding,
+      url
+    });
+  } catch (error) {
+    console.error("Error in Supabase insert: ", error);
+  }
+}
