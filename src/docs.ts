@@ -1,7 +1,7 @@
 import GPT3Tokenizer from "gpt3-tokenizer";
-import { getQuestionEmbedding, getSimilarEmbeddings, setQuestionEmbedding, updateSupabaseDoc } from "./supabase";
-import { OpenAIStream, OpenAIStreamPayload } from "./openAI/util";
-import { getEmbedding } from "./setEmbeddings";
+import { getQuestionEmbedding, getSimilarEmbeddings, setQuestionEmbedding, updateSupabaseDoc } from "./supabase.js";
+import { OpenAIStream, OpenAIStreamPayload } from "./openAI/util.js";
+import { getEmbedding } from "./setEmbeddings.js";
 
 const maxTokens = 2000;
 

@@ -24,19 +24,24 @@ interface Client {
 
 const client: Client = {
   url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  key: process.env.SUPABASE_ANON_KEY
+  key: process.env.SUPABASE_SERVICE_ROLE_KEY
 };
 
 if (!client.url || !client.key) {
   throw new Error("Missing Supabase credentials");
 }
 
-export const supabaseClient = createClient(client.url!, client.key!);
+export const supabaseClient = createClient(client.url, client.key, {
+  auth: {
+    persistSession: false
+  }
+});
 
-export async function setDocument(url: { url: string }[]): Promise<PostgrestSingleResponse<never[]> | PostgrestError> {
+export async function setDocument(url: { url: string }[], projectID: string): Promise<PostgrestSingleResponse<never[]> | PostgrestError> {
   try {
-    console.info('upserting ', url.length, ' records');
-    return supabaseClient.from('external_urls').upsert(url, { ignoreDuplicates: true }).select();
+    const location = `${projectID.toLowerCase()}_external_urls`;
+    console.info('upserting ', url.length, ' records to: ', location);
+    return supabaseClient.from(location).upsert(url, { ignoreDuplicates: true }).select();
   } catch (error) {
     return error as PostgrestError;
   }
@@ -47,13 +52,18 @@ interface dbInput {
 }
 
 // Save Embedding to Supabase
-export async function saveToSupabase(crawl: dbInput): Promise<void> {
+export async function saveToSupabase(crawl: dbInput, projectID: string): Promise<void> {
   try {
-    await supabaseClient.from(`${crawl.id}_documents`).insert({
+    console.log('setting Doc from: ', crawl.url);
+    await supabaseClient.from(`${crawl.id.toLowerCase()}_documents`).insert({
       content: crawl.input,
       embedding: crawl.embedding,
       url: crawl.url
     });
+    await supabaseClient.rpc('update_external_urls_last_embed_date', {
+      external_table_name: `${projectID}_external_urls`,
+      documents_table_name: `${projectID}_documents`
+    })
   } catch (error) {
     console.error("Error in Supabase insert: ", error);
   }
@@ -61,13 +71,15 @@ export async function saveToSupabase(crawl: dbInput): Promise<void> {
 
 export async function getProjectUrls(projectID: string): Promise<string[]> {
   try {
-    const { data } = await supabaseClient
-      .from(`${projectID}_external_urls`)
+    const { data, error } = await supabaseClient
+      .from(`${projectID.toLowerCase()}_external_urls`)
       .select('url')
       .is('last_embed_date', null);
 
+    if (error) console.log('error: ', error);
+
     // Extract the 'url' property from each item in the 'data' array
-    const urls: string[] = data.map((item: { url: string }) => item.url);
+    const urls: string[] = data?.map((item: { url: string }) => item.url);
 
     return urls;
   } catch (error) {
@@ -89,7 +101,7 @@ export async function setQuestionEmbedding({ question, embedding, location }: Qu
 }
 
 
-export async function getQuestionEmbedding(question: string, location: string): Promise<{embedding: number[], question: string, id: number} | null> {
+export async function getQuestionEmbedding(question: string, location: string): Promise<{ embedding: number[], question: string, id: number } | null> {
   try {
     const { data: embeddings, error } = await supabaseClient.from(location).select('*').ilike('question', `%${question}%`);
     if (error) {

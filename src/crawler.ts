@@ -113,12 +113,12 @@ const getSiteUrls = async (siteUrl: string, maxDepth: number): Promise<{ found: 
  * @description This function returns an array containing all the collected inner page URLs.
  * @returns {Promise<string[]>} - An array containing inner page URLs.
  */
-async function getAllInnerPages(url: string): Promise<boolean> {
+async function getAllInnerPages(url: string, projectID: string): Promise<boolean> {
 	console.log('starting');
 	console.time('crawl');
 	const allPages = await getSiteUrls(url, 3);
 	if (allPages.found.length) {
-		await setDocument(allPages.found.map(u => ({ url: u })));
+		await setDocument(allPages.found.map(u => ({ url: u })), projectID);
 		console.timeEnd('crawl');
 		return true
 	}
