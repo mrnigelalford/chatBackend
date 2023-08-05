@@ -50,8 +50,6 @@ async function fetchDocuments(url: string): Promise<{ url: string; body: string 
   return documents;
 }
 
-
-
 /**
  * Fetches documents from multiple URLs and returns their body text.
  * Limits the number of concurrent requests to 10.
