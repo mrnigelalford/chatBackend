@@ -29,7 +29,7 @@ const getOpenAIStream = async (question: string, projectID: string): Promise<str
   }
 
   // Build recall logic to pull previously stored embeddings and answers
-  const embeddingMatch = await getSimilarEmbeddings(embedding);
+  const embeddingMatch = await getSimilarEmbeddings(embedding, projectID);
 
   if (embeddingMatch?.gpt_response) {
     // this question has a response, use that instead of calling openai

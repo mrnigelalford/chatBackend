@@ -103,9 +103,9 @@ export async function setQuestionEmbedding({ question, embedding, location }: Qu
 
 export async function getQuestionEmbedding(question: string, location: string): Promise<{ embedding: number[], question: string, id: number } | null> {
   try {
-    const { data: embeddings, error } = await supabaseClient.from(location).select('*').ilike('question', `%${question}%`);
+    const { data: embeddings, error } = await supabaseClient.from(location.toLowerCase()).select('*').ilike('question', `%${question}%`);
     if (error) {
-      throw new Error("Error fetching question embedding.");
+      throw new Error(JSON.stringify(error));
     }
     return embeddings?.[0] || null;
   } catch (error) {
@@ -114,19 +114,21 @@ export async function getQuestionEmbedding(question: string, location: string): 
   }
 }
 
-export async function getSimilarEmbeddings(embedding: number[]): Promise<Embedding | null> {
+export async function getSimilarEmbeddings(embedding: number[], projectID: string): Promise<Embedding | null> {
   try {
+    console.log(`asking: ${projectID.toLowerCase()}_documents`);
     const { data: documents, error } = await supabaseClient.rpc(
       "match_documents",
       {
         query_embedding: embedding,
         similarity_threshold: 0.1, // Choose an appropriate threshold for your data
-        match_count: 3, // Choose the number of matches
+        match_count: 3, // Choose the number of matches,
+        documents_table_name: `${projectID.toLowerCase()}_documents`
       }
     );
 
     if (error) {
-      throw new Error("Error fetching similar embeddings.");
+      throw new Error(JSON.stringify(error));
     }
 
     return documents?.[0] || null;
