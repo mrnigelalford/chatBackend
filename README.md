@@ -6,8 +6,8 @@ Supported servcies:
   Github repo
   :green-check: Webpages
     :green-check: start crawl to discover all pages on a domain
-    take desired pages and pull content
-
+    :green-check: take desired pages and pull content
+[NEW] Adding Discord Support
 
 # Workflow
 1. Send POST request with base url
@@ -20,3 +20,10 @@ Supported servcies:
    1. points to supabase embeddings enpdoints
    2. supports building new embeddings whenever user talks
 4. Deploy working project
+
+
+
+## Front Ends
+Potential react front-end: https://www.npmjs.com/package/react-chat-widget
+
+Microsoft tool: https://github.com/microsoft/omnichannel-chat-widget
