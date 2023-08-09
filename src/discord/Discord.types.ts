@@ -39,6 +39,12 @@ export interface Data {
   id:   string;
   name: string;
   type: number;
+  resolved?: ResolvedData
+}
+
+interface ResolvedData {
+  users: User;
+  messages: { content: string }
 }
 
 export interface Guild {

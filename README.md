@@ -27,3 +27,9 @@ Supported servcies:
 Potential react front-end: https://www.npmjs.com/package/react-chat-widget
 
 Microsoft tool: https://github.com/microsoft/omnichannel-chat-widget
+
+# learnings
+[Discord contents](https://discord.com/developers/docs/interactions/receiving-and-responding)
+
+
+Form Fill details
