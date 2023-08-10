@@ -28,26 +28,17 @@ const getOpenAIStream = async (question: string, projectID: string): Promise<str
     await setQuestionEmbedding({ question, embedding, location: `${projectID}_questions` });
   }
 
-  // Build recall logic to pull previously stored embeddings and answers
   const embeddingMatch = await getSimilarEmbeddings(embedding, projectID);
 
   if (embeddingMatch?.gpt_response) {
     // this question has a response, use that instead of calling openai
     return embeddingMatch.gpt_response;
   } else {
-    const tokenizer = new GPT3Tokenizer({ type: "gpt3" });
     let contextText = "";
 
     // Use the first/highest returned doc
-    if (embeddingMatch) {
-      const encoded = tokenizer.encode(embeddingMatch.content);
-      // Limit context to max 1500 tokens (configurable)
-      if (encoded.text.length > maxTokens) {
-        return 'token count exceeded';
-      }
 
       contextText += `${embeddingMatch.content.trim()}\nSOURCE: ${embeddingMatch.url}\n---\n`;
-    }
 
     const systemContent = `You are a helpful assistant. When given CONTEXT you answer questions using only that information, and you always format your output in markdown. You include code snippets if relevant. If you are unsure and the answer is not explicitly written in the CONTEXT provided, you say "Sorry, I don't know how to help with that."  If the CONTEXT includes source URLs include them under a SOURCES heading at the end of your response. Always include all of the relevant source urls from the CONTEXT, but never list a URL more than once (ignore trailing forward slashes when comparing for uniqueness). Never include URLs that are not in the CONTEXT sections. Never make up URLs. Do not return markdown format`;
 
