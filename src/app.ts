@@ -2,14 +2,12 @@ import express, { Request, Response } from "express";
 import getAllInnerPages from "./crawler.js";
 import { setEmbeddings } from "./setEmbeddings.js";
 import getOpenAIStream from "./docs.js";
-import * as basicAuth from 'express-basic-auth'
+import basicAuth from 'express-basic-auth';
 
 
 const app = express();
 
 app.use(express.json());
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//@ts-ignore
 app.use(basicAuth({
   users: { 'admin': process.env.DOCIT_AUTH }
 }))
