@@ -6,7 +6,7 @@ import getOpenAIStream from "./docs.js";
 
 const app = express();
 app.use(express.json());
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
@@ -29,5 +29,5 @@ app.get('/questions', async (req: Request, res: Response) => {
 });
 
 app.listen(port, () => {
-  return console.log(`Express is listening at http://localhost:${port}`);
+  return console.log(`App is listening listening at http://localhost:${port}`);
 });

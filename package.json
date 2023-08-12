@@ -7,7 +7,11 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint . --ext .ts",
     "start": "tsc && node dist/app.js",
-    "discord:registerCommands": "node dist/discord/commands.js"
+    "discord:registerCommands": "node dist/discord/commands.js",
+    "build:digitalocean": "npm install --production=false && npm run build && npm ci"
+  },
+  "engines": {
+    "node": "18.x"
   },
   "type": "module",
   "keywords": [],
