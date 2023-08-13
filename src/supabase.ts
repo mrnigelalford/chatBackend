@@ -141,7 +141,8 @@ export async function getSimilarEmbeddings(embedding: number[], projectID: strin
 // Add gptResponse to document
 export async function updateSupabaseDoc(text: string, location: string, id: number): Promise<void> {
   try {
-    await supabaseClient.from(location).update({ 'gpt_response': text }).eq('id', id);
+    const update = await supabaseClient.from(location).update({ 'gpt_response': text }).eq('id', id);
+    console.log(`write resposne: (${update.status}) ${update.statusText}`)
   } catch (error) {
     console.error("Error in updateSupabaseDoc: ", error);
     throw error;

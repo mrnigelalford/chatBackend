@@ -4,6 +4,7 @@ import { getProjectUrls, saveToSupabase } from "./supabase.js";
 import natural from 'natural';
 import { JSDOM } from 'jsdom';
 import { Readability } from '@mozilla/readability';
+import axios from "axios";
 
 const DOC_SIZE = 8000;  // Roughly equivalent to 1600-2000 tokens in GPT-3
 
@@ -21,7 +22,7 @@ async function fetchDocuments(url: string): Promise<{ url: string; body: string 
 
   const response = await fetch(fetchURL);
   const html = await response.text();
-  
+
   const doc = new JSDOM(html, { url });
   const reader = new Readability(doc.window.document);
   const article = reader.parse();
@@ -71,23 +72,17 @@ async function getDocuments(urls: string[]): Promise<{ url: string; body: string
  */
 export async function getEmbedding(input: string): Promise<number[]> {
   const apiKey = process.env.OPENAI_API_KEY;
-  const apiURL = process.env.OPENAI_PROXY || "https://api.openai.com";
 
-  const embeddingResponse = await fetch(`${apiURL}/v1/embeddings`, {
-    method: "POST",
+  const embeddingResponse = await axios.post(`https://api.openai.com/v1/embeddings`, {
+    input,
+    model: process.env.EMBEDDING_MODEL
+  }, {
     headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      input,
-      model: "text-embedding-ada-002"
-    })
+      Authorization: `Bearer ${apiKey}`
+    }
   });
 
-  const embeddingData = await embeddingResponse.json();
-  const [{ embedding }] = embeddingData.data;
-  return embedding;
+  return embeddingResponse.data.data[0].embedding;
 }
 
 /**
@@ -99,9 +94,9 @@ async function scrapeAndEmbed(docURLs: string[], projectID: string) {
   const documents = await getDocuments(docURLs);
 
   for (const { url, body } of documents) {
-      const input = body.replace(/\n/g, " ");
-      const embedding = await getEmbedding(input);
-      await saveToSupabase({ url, input, embedding, id: projectID }, projectID);
+    const input = body.replace(/\n/g, " ");
+    const embedding = await getEmbedding(input);
+    await saveToSupabase({ url, input, embedding, id: projectID }, projectID);
   }
 }
 

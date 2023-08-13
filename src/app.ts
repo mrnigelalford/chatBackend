@@ -29,7 +29,6 @@ app.post('/PageEmbeddings', (req: Request, res: Response) => {
 })
 
 app.get('/questions', async (req: Request, res: Response) => {
-  console.log('user: ', req.headers.authorization);
   const answer = await getOpenAIStream(req.body.question, req.body.projectID);
   res.set('Content-Type', 'application/json').status(200).send({ answer })
 });

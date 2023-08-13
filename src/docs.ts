@@ -1,4 +1,3 @@
-import GPT3Tokenizer from "gpt3-tokenizer";
 import { getQuestionEmbedding, getSimilarEmbeddings, setQuestionEmbedding, updateSupabaseDoc } from "./supabase.js";
 import { OpenAIStream, OpenAIStreamPayload } from "./openAI/util.js";
 import { getEmbedding } from "./setEmbeddings.js";
@@ -40,7 +39,7 @@ const getOpenAIStream = async (question: string, projectID: string): Promise<str
 
       contextText += `${embeddingMatch.content.trim()}\nSOURCE: ${embeddingMatch.url}\n---\n`;
 
-    const systemContent = `You are a helpful assistant. When given CONTEXT you answer questions using only that information, and you always format your output in markdown. You include code snippets if relevant. If you are unsure and the answer is not explicitly written in the CONTEXT provided, you say "Sorry, I don't know how to help with that."  If the CONTEXT includes source URLs include them under a SOURCES heading at the end of your response. Always include all of the relevant source urls from the CONTEXT, but never list a URL more than once (ignore trailing forward slashes when comparing for uniqueness). Never include URLs that are not in the CONTEXT sections. Never make up URLs. Do not return markdown format`;
+    const systemContent = `Using CONTEXT, answer in markdown. Include code when needed. If unsure, state "Sorry, I don't know how to help with that." List unique URLs from CONTEXT under 'SOURCES' on separate lines. Avoid duplicate or invented URLs. Limit response to 65 words.`;
 
     const assistantContent = `example text
 
@@ -76,7 +75,7 @@ const getOpenAIStream = async (question: string, projectID: string): Promise<str
     ];
 
     const payload: OpenAIStreamPayload = {
-      model: "gpt-3.5-turbo-16k",
+      model: process.env.DEFAULT_MODEL,
       messages: messages,
       temperature: 0,
       top_p: 1,
@@ -96,7 +95,7 @@ const getOpenAIStream = async (question: string, projectID: string): Promise<str
       if (val && val !== '') chunks += val;
     }
     const gpt_response = chunks.replace("undefined", "");
-    if (embeddingMatch) await updateSupabaseDoc(gpt_response, 'documents', Number(embeddingMatch?.id));
+    if (embeddingMatch) await updateSupabaseDoc(gpt_response, `${projectID}_documents`, Number(embeddingMatch?.id));
 
     // TODO: return stream instead of string
     return gpt_response;
