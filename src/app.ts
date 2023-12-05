@@ -17,6 +17,11 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
+app.post('/llama-index', (req: Request, res: Response) => {
+  getAllInnerPages(req.body.url, req.body.projectID);
+  res.set('Content-Type', 'application/json').status(200).send({ note: 'Successfully started crawling operation. Please check additional endpoint for ongoing status or look in Supabase to see records returned. This endpoint will only start the crawling action.' })
+});
+
 // works
 app.post("/crawl", (req: Request, res: Response) => {
   getAllInnerPages(req.body.url, req.body.projectID);

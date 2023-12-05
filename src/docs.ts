@@ -1,6 +1,9 @@
 import { getQuestionEmbedding, getSimilarEmbeddings, setQuestionEmbedding, updateSupabaseDoc } from "./supabase.js";
-import { OpenAIStream, OpenAIStreamPayload } from "./openAI/util.js";
 import { getEmbedding } from "./setEmbeddings.js";
+import OpenAI from 'openai';
+import { ChatCompletionStreamParams } from "openai/lib/ChatCompletionStream";
+
+const openai = new OpenAI();
 
 const maxTokens = 2000;
 
@@ -74,7 +77,7 @@ const getOpenAIStream = async (question: string, projectID: string): Promise<str
       },
     ];
 
-    const payload: OpenAIStreamPayload = {
+    const payload = {
       model: process.env.DEFAULT_MODEL,
       messages: messages,
       temperature: 0,
@@ -86,19 +89,12 @@ const getOpenAIStream = async (question: string, projectID: string): Promise<str
       n: 1,
     };
 
-    const reader = (await OpenAIStream(payload)).getReader();
-    let chunks = "";
-
-    let done, val;
-    while (!done) {
-      ({ value: val, done } = await reader.read());
-      if (val && val !== '') chunks += val;
-    }
-    const gpt_response = chunks.replace("undefined", "");
+    const gpt_response =  await openai.beta.chat.completions.stream(payload as ChatCompletionStreamParams).finalChatCompletion();
+    console.log('gptr: ', gpt_response);
     if (embeddingMatch) await updateSupabaseDoc(gpt_response, `${projectID}_documents`, Number(embeddingMatch?.id));
 
     // TODO: return stream instead of string
-    return gpt_response;
+    return gpt_response as unknown as string;
   }
 };
 

@@ -18,6 +18,7 @@ export const crawlUrl = async ({
 	currentDepth += 1;
 
 	try {
+		console.log('crawl: ', url);
 		const { headers, statusCode } = await got.head(url);
 		if (statusCode !== 200) {
 			console.log(statusCode);
@@ -114,9 +115,10 @@ const getSiteUrls = async (siteUrl: string, maxDepth: number): Promise<{ found: 
  * @returns {Promise<string[]>} - An array containing inner page URLs.
  */
 async function getAllInnerPages(url: string, projectID: string): Promise<boolean> {
-	console.log('starting');
+	console.log('starting: ', projectID, ' | ', url);
 	console.time('crawl');
 	const allPages = await getSiteUrls(url, 3);
+	console.log('ap: ', allPages);
 	if (allPages.found.length) {
 		await setDocument(allPages.found.map(u => ({ url: u })), projectID);
 		console.timeEnd('crawl');

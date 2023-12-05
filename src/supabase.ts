@@ -1,5 +1,6 @@
 import { PostgrestError, PostgrestSingleResponse, createClient } from "@supabase/supabase-js";
 import * as dotenv from 'dotenv';
+import { ChatCompletion } from "openai/resources";
 
 dotenv.config();
 
@@ -139,7 +140,7 @@ export async function getSimilarEmbeddings(embedding: number[], projectID: strin
 }
 
 // Add gptResponse to document
-export async function updateSupabaseDoc(text: string, location: string, id: number): Promise<void> {
+export async function updateSupabaseDoc(text: ChatCompletion, location: string, id: number): Promise<void> {
   try {
     const update = await supabaseClient.from(location).update({ 'gpt_response': text }).eq('id', id);
     console.log(`write resposne: (${update.status}) ${update.statusText}`)

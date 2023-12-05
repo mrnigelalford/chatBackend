@@ -3,3 +3,4 @@ dist
 .env
 .DS_Store
 src/openAI/Purpose.md
+crawls/crawls/proxy-certs/pywb-ca.pem
